@@ -18,6 +18,11 @@
 | 🔄 **查询智能扩展** | 自动扩展查询提升召回率 | ✅ 已实现 |
 | 🌐 **Web交互界面** | 基于Gradio的直观界面 | ✅ 已实现 |
 
+🖼️ Interface Preview
+https://github.com/KJHkong/CLIP-MultiSearch/issues/1#issue-3912913840
+
+Search interface for query "a girl" showing image results with similarity scores
+
 ## 🚀 快速开始
 
 ```bash
