@@ -1,0 +1,19 @@
+# 忽略 data/images 文件夹
+data/images/
+
+# Python 项目常见忽略项
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# VS Code 配置文件夹
+.vscode/
+
+# 其他临时文件
+*.log
+.DS_Store
