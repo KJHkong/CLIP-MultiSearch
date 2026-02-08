@@ -1,44 +1,95 @@
 # 🔍 CLIP-MultiSearch
 
-**多模态智能搜索系统 | 文本搜图 · 以图搜图 · 视频关键帧搜索**
+**A CLIP-based multimodal retrieval system | Text-to-Image · Image-to-Image · Video Keyframe Search**
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](LICENSE)
+[![License](https://img.shields.io/pypi/l/ansicolortags.svg)](LICENSE)
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yourusername/CLIP-MultiSearch)
 
-> 基于OpenAI CLIP的多模态搜索系统，支持文本、图像、视频的智能语义搜索
+> **CLIP-MultiSearch** is a lightweight multimodal semantic search system built on **OpenAI CLIP**.  
+> It supports natural language image retrieval, query expansion, and is designed to be easily extended to image-to-image and video keyframe search.
 
-## ✨ 核心功能
+---
 
-| 功能 | 描述 | 状态 |
-|------|------|------|
-| 📝 **文本搜索图像** | 使用自然语言描述搜索图片库 | ✅ 已实现 |
-| 🖼️ **以图搜图** | 上传图片查找相似图片 | 🔄 开发中 |
-| 🎬 **视频关键帧搜索** | 提取视频关键帧并支持搜索 | 🔄 开发中 |
-| 🔄 **查询智能扩展** | 自动扩展查询提升召回率 | ✅ 已实现 |
-| 🌐 **Web交互界面** | 基于Gradio的直观界面 | ✅ 已实现 |
+## ✨ Core Features
 
-🖼️ Interface Preview
-https://github.com/KJHkong/CLIP-MultiSearch/issues/1#issue-3912913840
+| Feature | Description | Status |
+|-------|------------|--------|
+| 📝 **Text-to-Image Search** | Retrieve images using natural language queries | ✅ Implemented |
+| 🖼️ **Image-to-Image Search** | Upload an image to find visually similar images | 🔄 In Progress |
+| 🎬 **Video Keyframe Search** | Extract video keyframes and enable semantic search | 🔄 In Progress |
+| 🔄 **Query Expansion & Fusion** | Expand queries to improve recall and robustness | ✅ Implemented |
+| 🌐 **Web Interface** | Interactive Gradio-based web UI | ✅ Implemented |
 
-Search interface for query "a girl" showing image results with similarity scores
+---
 
-## 🚀 快速开始
+## 🖼️ Interface Preview
+
+Below shows the Gradio-based search interface for the query **"a girl"**, displaying top retrieved images with similarity scores.
+
+![CLIP-MultiSearch Demo](demo.png)
+
+---
+
+## 📦 Requirements
+
+- Python 3.8+
+- PyTorch (CPU or CUDA)
+- OpenAI CLIP
+- FAISS (CPU)
+- Gradio
+- Pillow
+- NumPy
+- tqdm
+
+All dependencies are listed in `requirements.txt`.
+
+---
+
+## 🚀 Quick Start
 
 ```bash
-# 克隆仓库
+# Clone the repository
 git clone https://github.com/yourusername/CLIP-MultiSearch.git
 cd CLIP-MultiSearch
 
-# 安装依赖
+# Install dependencies
 pip install -r requirements.txt
 
-# 准备数据
+# Prepare data
 mkdir -p data/images
-# 将你的图片放入 data/images/
+# Place your images into data/images/
 
-# 构建索引
+# Build FAISS index
 python src/build_index.py
 
-# 启动Web界面
+# Launch the web interface
 python src/web/gradio_ui.py
+
+
+⚙️ Indexing Parameters
+
+The indexing pipeline supports the following configurable parameters:
+
+| Parameter      | Default       | Description                                   |
+| -------------- | ------------- | --------------------------------------------- |
+| `--data_dir`   | `data/images` | Directory containing images to index          |
+| `--out_dir`    | `storage`     | Output directory for FAISS index and metadata |
+| `--model_name` | `ViT-B/32`    | CLIP model variant                            |
+| `--batch_size` | `32`          | Batch size for image encoding (CPU-friendly)  |
+
+```
+
+---
+## Example:
+
+    python src/build_index.py --data_dir data/images --batch_size 16
+---
+🔎 Search Parameters (Web UI)
+
+The Gradio web interface exposes the following parameters:
+| Parameter                      | Description                                          |
+| ------------------------------ | ---------------------------------------------------- |
+| **Query**                      | Natural language query (English or Chinese)          |
+| **Top-K**                      | Number of retrieved results                          |
+| **Number of Expanded Prompts** | Number of expanded queries used for retrieval fusion |
