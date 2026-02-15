@@ -30,7 +30,7 @@ Below shows the Gradio-based search interface for the query **"a girl"**, displa
 
 ![CLIP-MultiSearch Demo](demo.png)
 
-**LLM 改写查询**：勾选「使用 LLM 改写查询」后，中文或英文输入会被改写为多条英文视觉化短句再检索，显著提升中文检索效果。下图为以中文输入「小猫」为查询、LLM 扩展后的检索结果与 Prompt 调试信息。
+**LLM Query Rewrite**: When "Use LLM to rewrite query" is enabled, Chinese or English input is rewritten into multiple short English visual phrases before retrieval, which significantly improves results for Chinese queries. Below: retrieval results and prompt debug info for a Chinese query ("小猫" / kitten) with LLM expansion.
 
 ![CLIP-MultiSearch Demo (LLM)](demo_LLM.png)
 
@@ -71,7 +71,7 @@ python src/build_index.py
 
 # (Optional) Configure LLM rewrite: create .env in project root with:
 #   SILICONFLOW_API_KEY=your_key
-# Use 硅基流动 (SiliconFlow) DeepSeek API; default base is https://api.siliconflow.cn/v1
+# SiliconFlow DeepSeek API; default base is https://api.siliconflow.cn/v1
 
 # Launch the web interface
 python src/ui_gradio.py
@@ -103,4 +103,4 @@ The Gradio web interface exposes the following parameters:
 | **Query**                      | Natural language query (English or Chinese)          |
 | **Top-K**                      | Number of retrieved results                          |
 | **Number of Expanded Prompts** | Number of expanded queries used for retrieval fusion |
-| **使用 LLM 改写查询**          | When enabled, uses SiliconFlow DeepSeek to rewrite query into multiple English prompts (recommended for Chinese) |
+| **Use LLM to rewrite query**  | When enabled, uses SiliconFlow DeepSeek to rewrite query into multiple English prompts (recommended for Chinese) |
