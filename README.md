@@ -19,6 +19,7 @@
 | 🖼️ **Image-to-Image Search** | Upload an image to find visually similar images | 🔄 In Progress |
 | 🎬 **Video Keyframe Search** | Extract video keyframes and enable semantic search | 🔄 In Progress |
 | 🔄 **Query Expansion & Fusion** | Expand queries to improve recall and robustness | ✅ Implemented |
+| 🤖 **LLM Query Rewrite** | Use LLM to rewrite queries into multiple English prompts for better Chinese retrieval | ✅ Implemented |
 | 🌐 **Web Interface** | Interactive Gradio-based web UI | ✅ Implemented |
 
 ---
@@ -28,6 +29,10 @@
 Below shows the Gradio-based search interface for the query **"a girl"**, displaying top retrieved images with similarity scores.
 
 ![CLIP-MultiSearch Demo](demo.png)
+
+**LLM 改写查询**：勾选「使用 LLM 改写查询」后，中文或英文输入会被改写为多条英文视觉化短句再检索，显著提升中文检索效果。下图为以中文输入「小猫」为查询、LLM 扩展后的检索结果与 Prompt 调试信息。
+
+![CLIP-MultiSearch Demo (LLM)](demo_LLM.png)
 
 ---
 
@@ -41,8 +46,9 @@ Below shows the Gradio-based search interface for the query **"a girl"**, displa
 - Pillow
 - NumPy
 - tqdm
+- openai (for LLM query rewrite, OpenAI-compatible API)
 
-All dependencies are listed in `requirements.txt`.
+All dependencies are listed in `requirements.txt`. LLM rewrite is optional: without an API key, the UI falls back to rule-based query expansion.
 
 ---
 
@@ -63,8 +69,12 @@ mkdir -p data/images
 # Build FAISS index
 python src/build_index.py
 
+# (Optional) Configure LLM rewrite: create .env in project root with:
+#   SILICONFLOW_API_KEY=your_key
+# Use 硅基流动 (SiliconFlow) DeepSeek API; default base is https://api.siliconflow.cn/v1
+
 # Launch the web interface
-python src/web/gradio_ui.py
+python src/ui_gradio.py
 
 
 ⚙️ Indexing Parameters
@@ -93,3 +103,4 @@ The Gradio web interface exposes the following parameters:
 | **Query**                      | Natural language query (English or Chinese)          |
 | **Top-K**                      | Number of retrieved results                          |
 | **Number of Expanded Prompts** | Number of expanded queries used for retrieval fusion |
+| **使用 LLM 改写查询**          | When enabled, uses SiliconFlow DeepSeek to rewrite query into multiple English prompts (recommended for Chinese) |
