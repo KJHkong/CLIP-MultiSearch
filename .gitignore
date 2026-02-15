@@ -17,3 +17,7 @@ venv/
 # 其他临时文件
 *.log
 .DS_Store
+
+# 本地 API Key，切勿提交
+.env
+src/.env

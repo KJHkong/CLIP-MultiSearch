@@ -8,3 +8,4 @@ git+https://github.com/openai/CLIP.git
 faiss-cpu
 gradio
 numpy
+openai

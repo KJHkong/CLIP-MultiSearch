@@ -8,7 +8,7 @@ import clip
 import faiss
 
 # 导入之前写的查询扩展器
-from query_expand import expand_query
+from src.query_expand import expand_query
 
 def load_meta(meta_path: Path) -> List[Dict]:
 
@@ -58,10 +58,11 @@ def search_with_fusion(
     user_query: str,
     topk: int = 20,
     expand_n: int = 6,
+    use_llm: bool = True,
     fusion: str = "max",
     model_name: str = "ViT-B/32",
     storage_dir: str = "storage",
-) -> Tuple[List[Dict], List[Tuple[str, float]]]:
+) -> Tuple[List[Dict], List[Tuple[str, float]], str]:
     
     """
     主搜索函数：扩展查询 + 融合搜索结果
@@ -70,12 +71,13 @@ def search_with_fusion(
     - user_query: 用户查询文本
     - topk: 最终返回的结果数量
     - expand_n: 扩展的查询数量
+    - use_llm: 是否用 LLM 改写/扩展查询（中英文均可用）；False 则用规则模板
     - fusion: 融合策略（"max"或"vote"）
     - model_name: CLIP模型名称
     - storage_dir: 索引和元数据存储目录
     
     返回：
-    - Tuple[搜索结果列表, 扩展查询调试信息]
+    - Tuple[搜索结果列表, 扩展查询调试信息, 扩展方式说明字符串]
     """
     # 1. 加载CLIP模型
     device = "cpu"
@@ -87,8 +89,8 @@ def search_with_fusion(
     index = faiss.read_index(str(storage / "index.faiss"))  # 读取向量索引
     meta = load_meta(storage / "meta.jsonl")  # 读取图片元数据
 
-    # 3. 扩展查询：一个变多个
-    prompts = expand_query(user_query, n=expand_n) # 示例：输入"熊猫" → ["熊猫", "a photo of 熊猫", ...]
+    # 3. 扩展查询：一个变多个（LLM 或规则）
+    prompts, expand_source = expand_query(user_query, n=expand_n, use_llm=use_llm)
 
     # 4. 记录每个prompt的最高分 
     per_prompt_scores = []  # 存储 (prompt, 最高分) 的列表
@@ -138,5 +140,5 @@ def search_with_fusion(
         item["score"] = s  # 添加分数信息
         results.append(item)
 
-    # 9. 返回结果和调试信息
-    return results, per_prompt_scores
+    # 9. 返回结果、调试信息和扩展方式（便于界面显示是否用了 LLM）
+    return results, per_prompt_scores, expand_source
