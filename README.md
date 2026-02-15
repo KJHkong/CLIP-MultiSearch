@@ -30,7 +30,7 @@ Below shows the Gradio-based search interface for the query **"a girl"**, displa
 
 ![CLIP-MultiSearch Demo](demo.png)
 
-**LLM Query Rewrite**: When "Use LLM to rewrite query" is enabled, Chinese or English input is rewritten into multiple short English visual phrases before retrieval, which significantly improves results for Chinese queries. Below: retrieval results and prompt debug info for a Chinese query ("小猫" / kitten) with LLM expansion.
+**LLM Query Rewrite**: When "Use LLM to rewrite query" is enabled, Chinese or English input is rewritten into multiple short English visual phrases before retrieval, which significantly improves results for Chinese queries. Below: retrieval results and prompt debug info for a Chinese query (kitten) with LLM expansion.
 
 ![CLIP-MultiSearch Demo (LLM)](demo_LLM.png)
 
