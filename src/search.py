@@ -1,11 +1,12 @@
 import json
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Union
 
 import numpy as np
 import torch
 import clip
 import faiss
+from PIL import Image
 
 # 导入之前写的查询扩展器
 from src.query_expand import expand_query
@@ -53,6 +54,65 @@ def encode_text(model, device: str, text: str) -> np.ndarray:
 
      # 4. 转换为NumPy数组（FAISS需要）
     return feat.cpu().numpy().astype("float32")  # (1, dim)
+
+
+def _image_to_pil(image_input: Union[str, np.ndarray]) -> Image.Image:
+    """将路径或 numpy 数组转为 PIL Image（RGB）。"""
+    if isinstance(image_input, str):
+        return Image.open(image_input).convert("RGB")
+    if isinstance(image_input, np.ndarray):
+        return Image.fromarray(image_input.astype(np.uint8)).convert("RGB")
+    raise TypeError("image_input 应为文件路径(str)或 numpy 数组(H,W,3)")
+
+
+def search_by_image(
+    image_input: Union[str, np.ndarray],
+    topk: int = 20,
+    model_name: str = "ViT-B/32",
+    storage_dir: str = "storage",
+) -> List[Dict]:
+    """
+    以图搜图：用一张图片的 CLIP 特征在 FAISS 索引中检索最相似的图片。
+    与 build_index 使用相同的预处理和模型，保证向量空间一致。
+
+    参数：
+        image_input: 图片路径(str)或 numpy 数组(H,W,3)，如 Gradio Image 组件返回值
+        topk: 返回的结果数量
+        model_name: CLIP 模型名，需与建索引时一致
+        storage_dir: 索引与 meta 所在目录
+
+    返回：
+        与 search_with_fusion 相同结构的 results：List[Dict]，每项含 path, score, type 等
+    """
+    device = "cpu"
+    model, preprocess = clip.load(model_name, device=device)
+    model.eval()
+
+    storage = Path(storage_dir)
+    index = faiss.read_index(str(storage / "index.faiss"))
+    meta = load_meta(storage / "meta.jsonl")
+
+    pil_img = _image_to_pil(image_input)
+    img_tensor = preprocess(pil_img).unsqueeze(0).to(device)
+
+    with torch.no_grad():
+        feat = model.encode_image(img_tensor).float()
+        feat = feat / feat.norm(dim=-1, keepdim=True)
+    q = feat.cpu().numpy().astype("float32")  # (1, dim)
+
+    scores, ids = index.search(q, topk)
+    scores = scores[0]
+    ids = ids[0]
+
+    results = []
+    for idx, s in zip(ids, scores):
+        if idx < 0 or idx >= len(meta):
+            continue
+        item = meta[idx].copy()
+        item["score"] = float(s)
+        results.append(item)
+    return results
+
 
 def search_with_fusion(
     user_query: str,

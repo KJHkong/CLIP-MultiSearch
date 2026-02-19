@@ -8,7 +8,7 @@ if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
 import gradio as gr
-from src.search import search_with_fusion
+from src.search import search_with_fusion, search_by_image
 
 def run(query: str, topk: int, expand_n: int, use_llm: bool):
     """
@@ -54,61 +54,52 @@ def run(query: str, topk: int, expand_n: int, use_llm: bool):
     # 5. 返回结果给Gradio显示
     return gallery, debug
 
-# 6. 创建Gradio界面
-with gr.Blocks() as demo:   # gr.Blocks：更灵活的布局方式
-    # 6.1 添加标题和描述
-    gr.Markdown("# CLIP Media Search (MVP)\n文本检索图片（可扩展到视频命中帧）+ Query 扩展融合")
-    # "# " 表示一级标题
-    # "\n" 换行，继续显示描述文字
 
-    # 6.2 创建输入区域（第一行）
-    with gr.Row():  # 横向排列的容器
-        # 文本框：用于输入查询
-        query = gr.Textbox(label="Query",   # 标签文字
-                           placeholder="例如：南京夫子庙年味 / a dog on the beach" # 提示文本
-                           )
-    
-    # 6.3 创建参数调整区域（第二行）
-    with gr.Row():
-        # 滑动条：控制返回结果数量
-        topk = gr.Slider(5, 50,  # 最小值，最大值
-                         value=20,  # 默认值
-                         step=1,  # 步长
-                         label="Top-K"  # 标签
-                         ) 
-        # 滑动条：控制扩展查询数量
-        expand_n = gr.Slider(1, 10,  # 最小值，最大值
-                              value=6,   # 默认值
-                              step=1,   # 步长
-                              label="Number of expanded prompts"   # 标签
-                              )
-        # 开关：是否用 LLM 改写/扩展查询（中英文都生成多条英文视觉描述）
-        use_llm = gr.Checkbox(value=True, label="使用 LLM 改写查询")
-        
-    # 6.4 搜索按钮
-    btn = gr.Button("Search")  # 按钮，显示文字"Search"
+def run_image(image, topk: int):
+    """以图搜图：上传一张图，返回库中最相似的一批图片。"""
+    if image is None:
+        return [], "请上传一张图片后再搜索。"
+    results = search_by_image(image_input=image, topk=topk)
+    gallery = []
+    for r in results:
+        path = r["path"]
+        score = r["score"]
+        if r.get("type") == "image":
+            gallery.append((path, f"{score:.4f}  {path}"))
+        else:
+            gallery.append((path, f"{score:.4f}  {r.get('video_path','')} @ {r.get('timestamp_sec','')}"))
+    status = f"以图搜图：共返回 {len(results)} 条结果。"
+    return gallery, status
 
-    # 6.5 结果展示区域
-    # 画廊组件：用于显示图片网格
-    gallery = gr.Gallery(
-        label="Results", # 标签
-          columns=4,  # 每行显示4列图片
-          height=600  # 区域高度600像素
-          )
-    
-    # 6.6 调试信息区域
-    # 文本框：显示调试信息（只读）
-    debug = gr.Textbox(label="Prompt debug (top1 score for each prompt)",  # 标签
-                       lines=8  # 显示8行高度
-                       )
 
-    # 7. 绑定按钮点击事件
-    # 当按钮被点击时，执行run函数
+# 6. 创建Gradio界面（双 Tab：文本检索 + 以图搜图）
+with gr.Blocks() as demo:
+    gr.Markdown("# CLIP Media Search (MVP)\n文本检索 / 以图搜图 + Query 扩展融合")
 
-    btn.click(fn=run,  # 要执行的函数
-              inputs=[query, topk, expand_n, use_llm],  # 输入参数：来自4个组件
-              outputs=[gallery, debug]  # 输出结果：更新画廊和调试框
-              )
+    with gr.Tabs():
+        # Tab1：文本检索
+        with gr.Tab("文本检索"):
+            with gr.Row():
+                query = gr.Textbox(label="Query", placeholder="例如：南京夫子庙年味 / a dog on the beach")
+            with gr.Row():
+                topk = gr.Slider(5, 50, value=20, step=1, label="Top-K")
+                expand_n = gr.Slider(1, 10, value=6, step=1, label="Number of expanded prompts")
+                use_llm = gr.Checkbox(value=True, label="使用 LLM 改写查询")
+            btn = gr.Button("Search")
+            gallery = gr.Gallery(label="Results", columns=4, height=600)
+            debug = gr.Textbox(label="Prompt debug (top1 score for each prompt)", lines=8)
+            btn.click(fn=run, inputs=[query, topk, expand_n, use_llm], outputs=[gallery, debug])
+
+        # Tab2：以图搜图
+        with gr.Tab("以图搜图"):
+            with gr.Row():
+                image_in = gr.Image(label="上传图片", type="numpy")
+            with gr.Row():
+                topk_img = gr.Slider(5, 50, value=20, step=1, label="Top-K")
+            btn_img = gr.Button("以图搜图")
+            gallery_img = gr.Gallery(label="相似图片", columns=4, height=600)
+            status_img = gr.Textbox(label="状态", lines=2)
+            btn_img.click(fn=run_image, inputs=[image_in, topk_img], outputs=[gallery_img, status_img])
 
 # 8. 启动应用
 if __name__ == "__main__":
