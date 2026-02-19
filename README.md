@@ -16,7 +16,7 @@
 | Feature | Description | Status |
 |-------|------------|--------|
 | 📝 **Text-to-Image Search** | Retrieve images using natural language queries | ✅ Implemented |
-| 🖼️ **Image-to-Image Search** | Upload an image to find visually similar images | 🔄 In Progress |
+| 🖼️ **Image-to-Image Search** | Upload an image to find visually similar images in the same CLIP/FAISS index | ✅ Implemented |
 | 🎬 **Video Keyframe Search** | Extract video keyframes and enable semantic search | 🔄 In Progress |
 | 🔄 **Query Expansion & Fusion** | Expand queries to improve recall and robustness | ✅ Implemented |
 | 🤖 **LLM Query Rewrite** | Use LLM to rewrite queries into multiple English prompts for better Chinese retrieval | ✅ Implemented |
@@ -33,6 +33,10 @@ Below shows the Gradio-based search interface for the query **"a girl"**, displa
 **LLM Query Rewrite**: When "Use LLM to rewrite query" is enabled, Chinese or English input is rewritten into multiple short English visual phrases before retrieval, which significantly improves results for Chinese queries. Below: retrieval results and prompt debug info for a Chinese query (kitten) with LLM expansion.
 
 ![CLIP-MultiSearch Demo (LLM)](demo_LLM.png)
+
+**Image-to-Image Search**: In the "以图搜图" tab, upload a query image to retrieve the most semantically similar images from the indexed gallery (same CLIP embedding space and FAISS index as text search).
+
+![CLIP-MultiSearch Demo (Image-to-Image)](demo3.png)
 
 ---
 
@@ -73,7 +77,7 @@ python src/build_index.py
 #   SILICONFLOW_API_KEY=your_key
 # SiliconFlow DeepSeek API; default base is https://api.siliconflow.cn/v1
 
-# Launch the web interface
+# Launch the web interface (Text search + Image-to-image search tabs)
 python src/ui_gradio.py
 
 
@@ -97,10 +101,15 @@ The indexing pipeline supports the following configurable parameters:
 ---
 🔎 Search Parameters (Web UI)
 
-The Gradio web interface exposes the following parameters:
-| Parameter                      | Description                                          |
-| ------------------------------ | ---------------------------------------------------- |
-| **Query**                      | Natural language query (English or Chinese)          |
-| **Top-K**                      | Number of retrieved results                          |
-| **Number of Expanded Prompts** | Number of expanded queries used for retrieval fusion |
-| **Use LLM to rewrite query**  | When enabled, uses SiliconFlow DeepSeek to rewrite query into multiple English prompts (recommended for Chinese) |
+The Gradio interface has two tabs: **text-to-image**  and **image-to-image** .
+
+| Tab / Parameter                | Description                                                                 |
+| ------------------------------ | --------------------------------------------------------------------------- |
+| **text-to-image**                   | Natural language query; optional LLM rewrite; multi-prompt fusion.         |
+| **Query**                     | Natural language query (English or Chinese)                                 |
+| **Top-K**                     | Number of retrieved results                                                 |
+| **Number of expanded prompts**| Number of expanded queries for retrieval fusion                            |
+| **Use LLM to rewrite query** | SiliconFlow DeepSeek rewrites into multiple English prompts (recommended for Chinese) |
+| **image-to-image**                   | Upload an image to find visually similar images from the index.            |
+| **Upload image**              | Query image (file or paste)                                                 |
+| **Top-K**                     | Number of similar images to return                                         |
