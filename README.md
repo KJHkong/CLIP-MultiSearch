@@ -112,4 +112,3 @@ The Gradio interface has two tabs: **text-to-image**  and **image-to-image** .
 | **Use LLM to rewrite query** | SiliconFlow DeepSeek rewrites into multiple English prompts (recommended for Chinese) |
 | **image-to-image**                   | Upload an image to find visually similar images from the index.            |
 | **Upload image**              | Query image (file or paste)                                                 |
-| **Top-K**                     | Number of similar images to return                                         |
