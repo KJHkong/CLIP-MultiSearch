@@ -1,6 +1,10 @@
 # 忽略 data/images 文件夹
 data/images/
 
+# 视频及抽帧结果（体积大，按需提交）
+data/videos/
+storage/frames/
+
 # Python 项目常见忽略项
 __pycache__/
 *.pyc

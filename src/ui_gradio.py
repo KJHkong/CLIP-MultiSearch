@@ -8,7 +8,7 @@ if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
 import gradio as gr
-from src.search import search_with_fusion, search_by_image
+from src.search import search_with_fusion, search_by_image, search_video_clips
 
 def run(query: str, topk: int, expand_n: int, use_llm: bool):
     """
@@ -72,9 +72,51 @@ def run_image(image, topk: int):
     return gallery, status
 
 
-# 6. 创建Gradio界面（双 Tab：文本检索 + 以图搜图）
+"""
+基于文本检索视频关键帧并播放短视频片段。
+返回：
+- 对 Radio 的 update（更新 choices 列表）
+- 默认播放的视频 clip_path
+- 调试信息
+"""
+def run_video(query: str, topk: int, expand_n: int, use_llm: bool):
+    if not query.strip():
+        return gr.update(choices=[], value=None), None, ""
+    results, prompt_scores, expand_source = search_video_clips(
+        user_query=query,
+        topk=topk,
+        expand_n=expand_n,
+        use_llm=use_llm,
+    )
+
+    labels = []
+    clip_paths = []
+    for idx, r in enumerate(results):
+        vpath = r.get("video_path", "")
+        ts = r.get("timestamp_sec", "")
+        score = r.get("score", 0.0)
+        label = f"{idx+1}. {vpath} @ {ts}s (score={score:.4f})"
+        labels.append(label)
+        # 优先使用截取的短 clip，失败则退回原视频；统一用绝对路径便于 Gradio 播放
+        raw = r.get("clip_path") or vpath
+        if raw:
+            p = Path(raw)
+            clip_paths.append(str((_root / raw).resolve() if not p.is_absolute() else p.resolve()))
+        else:
+            clip_paths.append(None)
+
+    debug = f"[扩展方式] {expand_source}\n\n" + "\n".join([f"{s:.4f}\t{p}" for p, s in prompt_scores])
+    if not labels:
+        debug += "\n\n未命中任何视频帧。"
+        return gr.update(choices=[], value=None), None, debug
+
+    first_clip = clip_paths[0] if clip_paths else None
+    return gr.update(choices=labels, value=None), first_clip, debug
+
+
+# 6. 创建Gradio界面（三个 Tab：文本检索 + 以图搜图 + 捕捉视频关键帧）
 with gr.Blocks() as demo:
-    gr.Markdown("# CLIP Media Search (MVP)\n文本检索 / 以图搜图 + Query 扩展融合")
+    gr.Markdown("# CLIP Media Search (MVP)\n文本检索 / 以图搜图 / 捕捉视频关键帧 + Query 扩展融合")
 
     with gr.Tabs():
         # Tab1：文本检索
@@ -101,8 +143,61 @@ with gr.Blocks() as demo:
             status_img = gr.Textbox(label="状态", lines=2)
             btn_img.click(fn=run_image, inputs=[image_in, topk_img], outputs=[gallery_img, status_img])
 
+        # Tab3：捕捉视频关键帧
+        with gr.Tab("捕捉视频关键帧"):
+            with gr.Row():
+                query_v = gr.Textbox(label="Query (文本搜视频)", placeholder="例如：打篮球的人 / 日落海滩")
+            with gr.Row():
+                topk_v = gr.Slider(1, 20, value=5, step=1, label="Top-K 视频帧")
+                expand_n_v = gr.Slider(1, 10, value=6, step=1, label="Number of expanded prompts")
+                use_llm_v = gr.Checkbox(value=True, label="使用 LLM 改写查询")
+
+            btn_v = gr.Button("搜索视频关键帧")
+            # 左侧：命中结果列表；右侧：视频播放器（左右高度尽量一致）
+            with gr.Row(equal_height=True):
+                choices_v = gr.Radio(label="命中视频帧列表", choices=[], interactive=True, scale=1)
+                video_player = gr.Video(label="命中视频片段", height=360, scale=1)
+            debug_v = gr.Textbox(label="Prompt debug (video)", lines=8)
+
+            btn_v.click(
+                fn=run_video,
+                inputs=[query_v, topk_v, expand_n_v, use_llm_v],
+                outputs=[choices_v, video_player, debug_v],
+            )
+
+            # 选择列表变化时，更新播放器
+            def _update_video(selected_label, query, topk, expand_n, use_llm):
+                # 简化实现：重新跑一遍检索，根据 label 找到对应 clip_path
+                if not selected_label:
+                    return gr.update()
+                results, _, _ = search_video_clips(
+                    user_query=query,
+                    topk=topk,
+                    expand_n=expand_n,
+                    use_llm=use_llm,
+                )
+                for idx, r in enumerate(results):
+                    vpath = r.get("video_path", "")
+                    ts = r.get("timestamp_sec", "")
+                    score = r.get("score", 0.0)
+                    label = f"{idx+1}. {vpath} @ {ts}s (score={score:.4f})"
+                    if label == selected_label:
+                        raw = r.get("clip_path") or vpath
+                        if not raw:
+                            return None
+                        p = Path(raw)
+                        return str((_root / raw).resolve() if not p.is_absolute() else str(p.resolve()))
+                return gr.update()
+
+            choices_v.change(
+                fn=_update_video,
+                inputs=[choices_v, query_v, topk_v, expand_n_v, use_llm_v],
+                outputs=[video_player],
+            )
+
 # 8. 启动应用
 if __name__ == "__main__":
-    demo.launch()  # 启动Web服务器，默认地址：http://127.0.0.1:7860
+    # 允许 Gradio 访问项目下的 storage/clips、data/videos 等，否则返回的本地视频路径无法播放
+    demo.launch(allowed_paths=[str(_root)])
 
 

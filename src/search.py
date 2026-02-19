@@ -10,6 +10,7 @@ from PIL import Image
 
 # 导入之前写的查询扩展器
 from src.query_expand import expand_query
+from src.video_utils import make_video_clip
 
 def load_meta(meta_path: Path) -> List[Dict]:
 
@@ -202,3 +203,51 @@ def search_with_fusion(
 
     # 9. 返回结果、调试信息和扩展方式（便于界面显示是否用了 LLM）
     return results, per_prompt_scores, expand_source
+
+
+def search_video_clips(
+    user_query: str,
+    topk: int = 5,
+    expand_n: int = 6,
+    use_llm: bool = True,
+    model_name: str = "ViT-B/32",
+    storage_dir: str = "storage",
+    clip_len: float = 2.0,
+) -> Tuple[List[Dict], List[Tuple[str, float]], str]:
+    """
+    基于文本查询视频关键帧，并为每个关键帧生成一小段视频片段。
+    逻辑：先用 search_with_fusion 做统一检索，然后从结果中筛选 type=video_frame 的项，
+    对前 topk 个关键帧截取中心在 timestamp_sec 附近的 clip_len 秒视频。
+    """
+    # 先跑一遍统一检索（图片 + 视频帧），需要足够多的候选才能筛出视频帧
+    # 索引中视频帧占比小，topk*3 容易全是图片；改为取 500+ 条再筛
+    fetch_k = max(topk * 80, 500)
+    all_results, prompt_scores, expand_source = search_with_fusion(
+        user_query=user_query,
+        topk=fetch_k,
+        expand_n=expand_n,
+        use_llm=use_llm,
+        model_name=model_name,
+        storage_dir=storage_dir,
+    )
+
+    # 只保留视频帧
+    video_results = [r for r in all_results if r.get("type") == "video_frame"]
+    video_results = video_results[:topk]
+
+    # 为每个关键帧生成 clip_path（video_path 可能为相对路径，需基于项目根解析）
+    proj_root = Path(__file__).resolve().parents[1]
+    for r in video_results:
+        vpath = r.get("video_path")
+        if vpath and not Path(vpath).is_absolute():
+            vpath = str((proj_root / vpath).resolve())
+        ts = float(r.get("timestamp_sec", 0.0))
+        clip_path = make_video_clip(
+            video_path=vpath,
+            center_ts=ts,
+            clip_len=clip_len,
+            out_dir="storage/clips",
+        )
+        r["clip_path"] = clip_path
+
+    return video_results, prompt_scores, expand_source

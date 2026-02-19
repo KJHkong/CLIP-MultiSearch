@@ -17,7 +17,7 @@
 |-------|------------|--------|
 | 📝 **Text-to-Image Search** | Retrieve images using natural language queries | ✅ Implemented |
 | 🖼️ **Image-to-Image Search** | Upload an image to find visually similar images in the same CLIP/FAISS index | ✅ Implemented |
-| 🎬 **Video Keyframe Search** | Extract video keyframes and enable semantic search | 🔄 In Progress |
+| 🎬 **Video Keyframe Search** | Extract video keyframes, encode with CLIP, append to same index; text/image search returns video hits with path + timestamp | ✅ Implemented |
 | 🔄 **Query Expansion & Fusion** | Expand queries to improve recall and robustness | ✅ Implemented |
 | 🤖 **LLM Query Rewrite** | Use LLM to rewrite queries into multiple English prompts for better Chinese retrieval | ✅ Implemented |
 | 🌐 **Web Interface** | Interactive Gradio-based web UI | ✅ Implemented |
@@ -34,9 +34,13 @@ Below shows the Gradio-based search interface for the query **"a girl"**, displa
 
 ![CLIP-MultiSearch Demo (LLM)](demo_LLM.png)
 
-**Image-to-Image Search**: In the "以图搜图" tab, upload a query image to retrieve the most semantically similar images from the indexed gallery (same CLIP embedding space and FAISS index as text search).
+**Image-to-Image Search**: In the Image-to-Image tab, upload a query image to retrieve the most semantically similar images from the indexed gallery (same CLIP embedding space and FAISS index as text search).
 
 ![CLIP-MultiSearch Demo (Image-to-Image)](demo3.png)
+
+**Video Keyframe Search**: In the Video Keyframe tab, enter a text query to search for matching video keyframes. The system returns a ranked list of hits (video path + timestamp) and plays the corresponding short clip inline. LLM expansion is supported for Chinese queries.
+
+![CLIP-MultiSearch Demo (Video Keyframe)](demo4.png)
 
 ---
 
@@ -51,6 +55,8 @@ Below shows the Gradio-based search interface for the query **"a girl"**, displa
 - NumPy
 - tqdm
 - openai (for LLM query rewrite, OpenAI-compatible API)
+- opencv-python (for video frame extraction)
+- imageio-ffmpeg (bundled ffmpeg for video clip generation; no separate ffmpeg install required)
 
 All dependencies are listed in `requirements.txt`. LLM rewrite is optional: without an API key, the UI falls back to rule-based query expansion.
 
@@ -70,14 +76,17 @@ pip install -r requirements.txt
 mkdir -p data/images
 # Place your images into data/images/
 
-# Build FAISS index
+# Build FAISS index (images)
 python src/build_index.py
+
+# (Optional) Add video keyframes: place videos in data/videos/, then run
+python src/build_video_index.py
 
 # (Optional) Configure LLM rewrite: create .env in project root with:
 #   SILICONFLOW_API_KEY=your_key
 # SiliconFlow DeepSeek API; default base is https://api.siliconflow.cn/v1
 
-# Launch the web interface (Text search + Image-to-image search tabs)
+# Launch the web interface (Text search + Image-to-image + Video keyframe search tabs)
 python src/ui_gradio.py
 
 
@@ -95,20 +104,27 @@ The indexing pipeline supports the following configurable parameters:
 ```
 
 ---
-## Example:
+## Examples:
 
     python src/build_index.py --data_dir data/images --batch_size 16
----
-🔎 Search Parameters (Web UI)
+    python src/build_video_index.py --video_dir data/videos --interval_sec 2.0
 
-The Gradio interface has two tabs: **text-to-image**  and **image-to-image** .
+---
+## 🔎 Search Parameters (Web UI)
+
+The Gradio interface has three tabs: **text-to-image**, **image-to-image**, and **video keyframe search**.
 
 | Tab / Parameter                | Description                                                                 |
 | ------------------------------ | --------------------------------------------------------------------------- |
-| **text-to-image**                   | Natural language query; optional LLM rewrite; multi-prompt fusion.         |
-| **Query**                     | Natural language query (English or Chinese)                                 |
-| **Top-K**                     | Number of retrieved results                                                 |
-| **Number of expanded prompts**| Number of expanded queries for retrieval fusion                            |
-| **Use LLM to rewrite query** | SiliconFlow DeepSeek rewrites into multiple English prompts (recommended for Chinese) |
-| **image-to-image**                   | Upload an image to find visually similar images from the index.            |
-| **Upload image**              | Query image (file or paste)                                                 |
+| **text-to-image**              | Natural language query; optional LLM rewrite; multi-prompt fusion.         |
+| **Query**                      | Natural language query (English or Chinese)                                 |
+| **Top-K**                      | Number of retrieved results                                                 |
+| **Number of expanded prompts** | Number of expanded queries for retrieval fusion                            |
+| **Use LLM to rewrite query**   | SiliconFlow DeepSeek rewrites into multiple English prompts (recommended for Chinese) |
+| **image-to-image**             | Upload an image to find visually similar images from the index.            |
+| **Upload image**               | Query image (file or paste)                                                 |
+| **video keyframe search**      | Text query to search video keyframes; returns ranked hits and plays clips inline. |
+| **Query (text search video)**  | Natural language query (English or Chinese)                                 |
+| **Top-K video frames**         | Number of video keyframe results to return                                  |
+| **Number of expanded prompts** | Same as text-to-image tab                                                   |
+| **Use LLM to rewrite query**   | Same as text-to-image tab                                                   |
