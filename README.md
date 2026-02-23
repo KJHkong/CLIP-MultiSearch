@@ -19,8 +19,9 @@
 | 🖼️ **Image-to-Image Search** | Upload an image to find visually similar images in the same CLIP/FAISS index | ✅ Implemented |
 | 🎬 **Video Keyframe Search** | Extract video keyframes, encode with CLIP, append to same index; text/image search returns video hits with path + timestamp | ✅ Implemented |
 | 🔄 **Query Expansion & Fusion** | Expand queries to improve recall and robustness | ✅ Implemented |
-| 🤖 **LLM Query Rewrite** | Use LLM to rewrite queries into multiple English prompts for better Chinese retrieval | ✅ Implemented |
+| 🖥️ **LLM Query Rewrite** | Use LLM to rewrite queries into multiple English prompts for better Chinese retrieval | ✅ Implemented |
 | 🌐 **Web Interface** | Interactive Gradio-based web UI | ✅ Implemented |
+| 🤖 **Dify Agent** | Expose search as API tools; Agent uses natural language to trigger search and summarize results | ✅ Implemented |
 
 ---
 
@@ -41,6 +42,10 @@ Below shows the Gradio-based search interface for the query **"a girl"**, displa
 **Video Keyframe Search**: In the Video Keyframe tab, enter a text query to search for matching video keyframes. The system returns a ranked list of hits (video path + timestamp) and plays the corresponding short clip inline. LLM expansion is supported for Chinese queries.
 
 ![CLIP-MultiSearch Demo (Video Keyframe)](demo4.png)
+
+**Dify Agent**: The same search logic is exposed as HTTP API and can be registered as custom tools in Dify. An Agent can use natural language to trigger text or video search and summarize results. Below: an Agent (e.g. "CLIP Search Assistant") answering a user query with search results.
+
+![CLIP-MultiSearch Demo (Dify Agent)](demo5.png)
 
 ---
 
@@ -110,6 +115,34 @@ The indexing pipeline supports the following configurable parameters:
     python src/build_video_index.py --video_dir data/videos --interval_sec 2.0
 
 ---
+
+## 🤖 API for Dify Agent
+
+A FastAPI server exposes the same search logic as HTTP endpoints so you can use them as **Dify custom API tools**:
+
+- `POST /search/text` — text-to-image search
+- `POST /search/video` — text-to-video keyframe search  
+- `POST /search/image` — image-to-image search (file upload or base64)
+
+Run the API from project root:
+
+```bash
+pip install -r requirements.txt   # includes fastapi, uvicorn
+python -m uvicorn src.api_fastapi:app --host 0.0.0.0 --port 8000
+```
+
+- **Health check**: `GET /health` returns `{"status":"ok", "service": "CLIP-MultiSearch API", "version": "0.1.0"}` for liveness probes.
+
+See **[docs/API_DIFY.md](docs/API_DIFY.md)** for endpoint details and step-by-step Dify tool configuration.
+
+---
+
+## 📌 Project Scope
+
+This project focuses on **multimodal retrieval (image + video keyframes) and Agent integration**. It does **not** include a document RAG or knowledge-base backend; the Dify Agent uses only the CLIP search API as tools. Possible future extensions (e.g. document RAG, other modalities) are left out of scope for this repo.
+
+---
+
 ## 🔎 Search Parameters (Web UI)
 
 The Gradio interface has three tabs: **text-to-image**, **image-to-image**, and **video keyframe search**.

@@ -1,0 +1,109 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "CLIP-MultiSearch API",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local API (use host.docker.internal:8000 if Dify runs in Docker)"
+    }
+  ],
+  "paths": {
+    "/search/text": {
+      "post": {
+        "operationId": "search_text",
+        "summary": "Text search",
+        "description": "Search images by natural language query (e.g. 'a cat', '小猫').",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "Search query in natural language"
+                  },
+                  "topk": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Number of results"
+                  },
+                  "expand_n": {
+                    "type": "integer",
+                    "default": 6
+                  },
+                  "use_llm": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                },
+                "required": ["query"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "results": { "type": "array" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/video": {
+      "post": {
+        "operationId": "search_video",
+        "summary": "Video keyframe search",
+        "description": "Search video keyframes by text query.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "Search query for video content"
+                  },
+                  "topk": {
+                    "type": "integer",
+                    "default": 5
+                  },
+                  "expand_n": {
+                    "type": "integer",
+                    "default": 6
+                  },
+                  "use_llm": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                },
+                "required": ["query"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Video search results"
+          }
+        }
+      }
+    }
+  }
+}

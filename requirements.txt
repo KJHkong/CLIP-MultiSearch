@@ -11,3 +11,6 @@ numpy>=1.21.6,<1.28
 openai
 opencv-python
 imageio-ffmpeg
+fastapi
+uvicorn[standard]
+python-multipart
