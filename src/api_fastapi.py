@@ -19,6 +19,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from src.search import search_with_fusion, search_by_image, search_video_clips
+from src.agent_orchestra import AgentOrchestra, AgentResponse
 
 # 供 Dify/前端展示图片用的 API 根地址（Dify 在 Docker 时设为 http://host.docker.internal:8000）
 API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:8000").rstrip("/")
@@ -86,6 +87,64 @@ class VideoSearchResponse(BaseModel):
     expand_source: str = ""
 
 
+# ---------- Agent Search Models ----------
+
+class AgentSearchRequest(BaseModel):
+    query: str = Field(..., description="User query in Chinese or English (e.g. '一只坐在红色沙发上的黑猫')")
+    max_rounds: int = Field(3, ge=1, le=5, description="Maximum search-retry rounds")
+    enable_evidence: bool = Field(True, description="Enable VLM-based visual evidence grounding")
+    enable_llm_rerank: bool = Field(True, description="Enable LLM-based result re-ranking")
+    evidence_top_n: int = Field(5, ge=1, le=10, description="Number of evidence items to extract")
+
+
+class CitationItem(BaseModel):
+    evidence_id: str
+    asset_display: str
+    note: str
+
+
+class TrajectoryStepItem(BaseModel):
+    round: int
+    plan_summary: str
+    results_count: int
+    reflection_reason: str
+
+
+class EvidenceItem(BaseModel):
+    evidence_id: str
+    modality: str
+    asset_path: str
+    timestamp_sec: Optional[float] = None
+    video_path: Optional[str] = None
+    clip_path: Optional[str] = None
+    relevance_score: float = 0.0
+    visual_description: str = ""
+    grounding_rationale: str = ""
+    bounding_hint: str = ""
+
+
+class PlanInfo(BaseModel):
+    query_type: str
+    plan_summary: str
+    sub_queries: List[Dict[str, Any]] = Field(default_factory=list)
+    fusion_strategy: str = "max"
+
+
+class AgentSearchResponse(BaseModel):
+    success: bool = True
+    message: str = "ok"
+    answer: str
+    citations: List[CitationItem] = Field(default_factory=list)
+    search_trajectory: List[TrajectoryStepItem] = Field(default_factory=list)
+    evidences: List[EvidenceItem] = Field(default_factory=list)
+    fused_results: List[Dict[str, Any]] = Field(default_factory=list)
+    total_rounds: int = 0
+    confidence: float = 0.0
+    disclaimer: str = ""
+    elapsed_ms: float = 0.0
+    plan: Optional[PlanInfo] = None
+
+
 def _item_from_result(r: dict) -> SearchResultItem:
     path = r.get("path", "")
     item_type = r.get("type", "image")
@@ -146,7 +205,7 @@ def serve_file(file_path: str):
 @app.post("/search/text", response_model=TextSearchResponse)
 def search_text(req: TextSearchRequest):
     """Text-to-image (and video frame) search. Use for natural language queries."""
-    if not (req.query or req.query.strip()):
+    if not req.query.strip():
         raise HTTPException(status_code=400, detail="query is required")
     try:
         results, _, expand_source = search_with_fusion(
@@ -164,7 +223,7 @@ def search_text(req: TextSearchRequest):
 @app.post("/search/video", response_model=VideoSearchResponse)
 def search_video(req: VideoSearchRequest):
     """Text-to-video keyframe search. Returns ranked video clips with paths and timestamps."""
-    if not (req.query or req.query.strip()):
+    if not req.query.strip():
         raise HTTPException(status_code=400, detail="query is required")
     try:
         results, _, expand_source = search_video_clips(
@@ -223,6 +282,63 @@ def search_image_base64(
             Path(path).unlink(missing_ok=True)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid image or search failed: {e}")
+
+
+# ---------- Agent Search ----------
+
+_orchestra: Optional[AgentOrchestra] = None
+
+
+def _get_orchestra() -> AgentOrchestra:
+    global _orchestra
+    if _orchestra is None:
+        _orchestra = AgentOrchestra()
+    return _orchestra
+
+
+@app.post("/search/agent", response_model=AgentSearchResponse)
+def search_agent(req: AgentSearchRequest):
+    """
+    Full Agentic Multimodal Search: Plan → Route → Search → Reflect → Evidence → Synthesize.
+
+    Returns a comprehensive answer with structured citations, search trajectory,
+    and visual evidence grounded by Qwen2.5-VL.
+    """
+    if not (req.query and req.query.strip()):
+        raise HTTPException(status_code=400, detail="query is required")
+    try:
+        orchestra = _get_orchestra()
+        orchestra.max_rounds = req.max_rounds
+        orchestra.enable_evidence = req.enable_evidence
+        orchestra.enable_llm_rerank = req.enable_llm_rerank
+        orchestra.evidence_top_n = req.evidence_top_n
+
+        resp = orchestra.search(req.query.strip())
+        return AgentSearchResponse(
+            answer=resp.answer,
+            citations=[
+                CitationItem(evidence_id=c.evidence_id, asset_display=c.asset_display, note=c.note)
+                for c in resp.citations
+            ],
+            search_trajectory=[
+                TrajectoryStepItem(
+                    round=s.round, plan_summary=s.plan_summary,
+                    results_count=s.results_count, reflection_reason=s.reflection_reason,
+                )
+                for s in resp.search_trajectory
+            ],
+            evidences=[
+                EvidenceItem(**ev) for ev in resp.evidences
+            ],
+            fused_results=resp.fused_results,
+            total_rounds=resp.total_rounds,
+            confidence=resp.confidence,
+            disclaimer=resp.disclaimer,
+            elapsed_ms=resp.elapsed_ms,
+            plan=PlanInfo(**resp.plan) if resp.plan else None,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":

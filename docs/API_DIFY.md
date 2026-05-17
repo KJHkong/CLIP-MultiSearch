@@ -39,6 +39,7 @@ python src/api_fastapi.py
 | POST | `/search/video` | Text-to-video keyframe search (JSON body) |
 | POST | `/search/image` | Image-to-image search (multipart: file + `topk`) |
 | POST | `/search/image/json` | Image-to-image search (form: `image_base64` + `topk`) |
+| POST | `/search/agent` | **Full Agentic Search** — Plan → Route → Search → Reflect → Evidence → Synthesize |
 
 ---
 
@@ -167,6 +168,86 @@ If Dify runs inside Docker and the API runs on the host:
 
 ---
 
+### 4.4 Agentic Search tool (full pipeline)
+
+- **Name**: `clip_agent_search`
+- **URL**: `http://<API_HOST>:8000/search/agent`
+- **Method**: POST
+- **Headers**: `Content-Type: application/json`
+- **Body** (JSON):
+
+```json
+{
+  "query": "{{query}}",
+  "max_rounds": 3,
+  "enable_evidence": true,
+  "enable_llm_rerank": true,
+  "evidence_top_n": 5
+}
+```
+
+- **Parameters** (add in Dify):
+  - `query` (string, required): natural language query (Chinese or English)
+  - `max_rounds` (number, optional): max search-retry rounds (1-5, default 3)
+  - `enable_evidence` (boolean, optional): enable Qwen-VL visual grounding (default true)
+  - `enable_llm_rerank` (boolean, optional): enable LLM semantic re-ranking (default true)
+  - `evidence_top_n` (number, optional): number of evidence items to extract (1-10, default 5)
+
+Response shape:
+
+```json
+{
+  "success": true,
+  "answer": "Found a black cat sitting on a red sofa...",
+  "citations": [
+    { "evidence_id": "E1", "asset_display": "images/cat_sofa.jpg", "note": "A black cat on a red sofa" }
+  ],
+  "search_trajectory": [
+    { "round": 1, "plan_summary": "直接检索", "results_count": 12, "reflection_reason": "分数偏低" }
+  ],
+  "evidences": [
+    {
+      "evidence_id": "E1",
+      "modality": "image",
+      "asset_path": "images/cat_sofa.jpg",
+      "relevance_score": 0.35,
+      "visual_description": "A black cat sitting on a red sofa",
+      "grounding_rationale": "Perfect visual match to query",
+      "bounding_hint": "center"
+    }
+  ],
+  "fused_results": [...],
+  "total_rounds": 2,
+  "confidence": 0.85,
+  "disclaimer": "",
+  "elapsed_ms": 4521,
+  "plan": {
+    "query_type": "complex",
+    "plan_summary": "多属性约束查询，拆解为子查询",
+    "sub_queries": [...],
+    "fusion_strategy": "llm_rerank"
+  }
+}
+```
+
+### 4.5 Dify Agent System Prompt (recommended)
+
+When using the Agent Search tool in a Dify Agent, set the system prompt to:
+
+```text
+You are a multimodal search assistant with access to a powerful agentic search tool.
+
+When the user asks to find, search, or locate images/videos:
+1. Use the clip_agent_search tool with the user's raw query.
+2. The tool automatically handles planning, multi-round retrieval, and evidence grounding.
+3. Summarize the answer field in your response.
+4. If citations are present, mention them: "Found evidence in [E1] (description)".
+
+Do NOT modify or rewrite the user's query before passing it to the tool — the Agent Pipeline handles query planning internally.
+```
+
+---
+
 ## 6. Quick test (curl)
 
 ```bash
@@ -179,4 +260,9 @@ curl -X POST http://localhost:8000/search/text \
 curl -X POST http://localhost:8000/search/video \
   -H "Content-Type: application/json" \
   -d '{"query":"小猫","topk":2}'
+
+# Agent search (full pipeline)
+curl -X POST http://localhost:8000/search/agent \
+  -H "Content-Type: application/json" \
+  -d '{"query":"一只坐在红色沙发上的黑猫","max_rounds":2}'
 ```

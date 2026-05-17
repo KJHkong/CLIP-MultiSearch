@@ -9,6 +9,7 @@ if str(_root) not in sys.path:
 
 import gradio as gr
 from src.search import search_with_fusion, search_by_image, search_video_clips
+from src.agent_orchestra import AgentOrchestra
 
 def run(query: str, topk: int, expand_n: int, use_llm: bool):
     """
@@ -114,8 +115,92 @@ def run_video(query: str, topk: int, expand_n: int, use_llm: bool):
     return gr.update(choices=labels, value=None), first_clip, debug
 
 
-# 6. 创建Gradio界面（三个 Tab：文本检索 + 以图搜图 + 捕捉视频关键帧）
-with gr.Blocks() as demo:
+# ---------- Agent Search ----------
+
+_orchestra = None
+
+
+def _get_orchestra():
+    global _orchestra
+    if _orchestra is None:
+        _orchestra = AgentOrchestra()
+    return _orchestra
+
+
+def run_agent(query: str, max_rounds: int, enable_evidence: bool, enable_rerank: bool):
+    """Agentic Search: Plan → Route → Search → Reflect → Evidence → Synthesize。"""
+    if not query.strip():
+        return "", "", "", "", "", "", "请输入查询。"
+    try:
+        orchestra = _get_orchestra()
+        orchestra.max_rounds = max_rounds
+        orchestra.enable_evidence = enable_evidence
+        orchestra.enable_llm_rerank = enable_rerank
+
+        resp = orchestra.search(query.strip())
+
+        # Plan 信息
+        plan_text = ""
+        if resp.plan:
+            plan_text += f"**Query Type**: {resp.plan.get('query_type', 'N/A')}\n"
+            plan_text += f"**Plan**: {resp.plan.get('plan_summary', 'N/A')}\n"
+            plan_text += f"**Fusion**: {resp.plan.get('fusion_strategy', 'N/A')}\n"
+            for sq in resp.plan.get("sub_queries", []):
+                plan_text += f"- [{sq.get('modality', '?')}] `{sq.get('text', '?')}` (w={sq.get('weight', 1.0)})\n"
+
+        # Trajectory
+        traj_text = ""
+        for s in resp.search_trajectory:
+            traj_text += f"**Round {s.round}**: {s.plan_summary}\n"
+            traj_text += f"  Results: {s.results_count} | Reflection: {s.reflection_reason}\n\n"
+
+        # Evidence
+        ev_text = ""
+        for ev in resp.evidences:
+            ev_text += f"### [{ev.get('evidence_id', '?')}] {ev.get('modality', '?')}\n"
+            ev_text += f"- **Path**: `{ev.get('asset_path', '?')}`\n"
+            ts = ev.get('timestamp_sec')
+            if ts:
+                ev_text += f"- **Timestamp**: {ts:.1f}s\n"
+            ev_text += f"- **Score**: {ev.get('relevance_score', 0):.4f}\n"
+            ev_text += f"- **Visual**: {ev.get('visual_description', '')}\n"
+            ev_text += f"- **Rationale**: {ev.get('grounding_rationale', '')}\n"
+            hint = ev.get('bounding_hint', '')
+            if hint:
+                ev_text += f"- **Region**: {hint}\n"
+            ev_text += "\n"
+
+        # Citations
+        cite_text = ""
+        for c in resp.citations:
+            cite_text += f"- **[{c.evidence_id}]** `{c.asset_display}` — {c.note}\n"
+
+        # Results gallery
+        gallery = []
+        for r in resp.fused_results:
+            path = r.get("path", "")
+            score = r.get("score", 0.0)
+            gallery.append((path, f"{score:.4f}  {path}"))
+
+        # Answer
+        answer_text = resp.answer
+
+        # Status
+        status = (
+            f"Rounds: {resp.total_rounds} | "
+            f"Confidence: {resp.confidence:.2f} | "
+            f"Latency: {resp.elapsed_ms:.0f}ms"
+        )
+        if resp.disclaimer:
+            status += f"\n\n⚠️ {resp.disclaimer}"
+
+        return plan_text, traj_text, ev_text, cite_text, gallery, answer_text, status
+    except Exception as e:
+        return "", "", "", "", [], "", f"Error: {e}"
+
+
+# 6. 创建Gradio界面（四个 Tab：文本检索 + 以图搜图 + 捕捉视频关键帧 + Agent Search）
+with gr.Blocks(title="CLIP-MultiSearch Agent") as demo:
     gr.Markdown("# CLIP Media Search (MVP)\n文本检索 / 以图搜图 / 捕捉视频关键帧 + Query 扩展融合")
 
     with gr.Tabs():
@@ -194,6 +279,55 @@ with gr.Blocks() as demo:
                 inputs=[choices_v, query_v, topk_v, expand_n_v, use_llm_v],
                 outputs=[video_player],
             )
+
+        # Tab4：Agent Search（完整 Agent Pipeline）
+        with gr.Tab("Agent Search"):
+            gr.Markdown(
+                "### Agentic Multimodal Search\n"
+                "Plan → Route → Search → Reflect → Evidence → Synthesize\n\n"
+                "完整 Agent 流水线：查询规划 → 模态路由 → 多轮检索+反思 → 视觉证据定位 → 答案合成+引用"
+            )
+            with gr.Row():
+                with gr.Column(scale=1):
+                    agent_query = gr.Textbox(
+                        label="Query",
+                        placeholder="例如：一只坐在红色沙发上的黑猫 / Find a black cat on a red sofa",
+                        lines=2,
+                    )
+                    with gr.Row():
+                        agent_max_rounds = gr.Slider(1, 5, value=3, step=1, label="Max Rounds")
+                        agent_evidence = gr.Checkbox(value=True, label="启用 Evidence Grounding (Qwen-VL)")
+                        agent_rerank = gr.Checkbox(value=True, label="启用 LLM Rerank")
+                    agent_btn = gr.Button("Agent Search", variant="primary")
+
+                with gr.Column(scale=2):
+                    agent_status = gr.Textbox(label="Status", lines=2)
+
+            # Plan + Trajectory
+            with gr.Row():
+                agent_plan = gr.Textbox(label="Plan（查询规划）", lines=6, visible=True)
+                agent_traj = gr.Textbox(label="Search Trajectory（搜索轨迹）", lines=6, visible=True)
+
+            # Evidence + Citations
+            with gr.Row():
+                agent_evidence_md = gr.Textbox(label="Evidence（视觉证据）", lines=10)
+                agent_citations = gr.Textbox(label="Citations（引用列表）", lines=6)
+
+            # Answer
+            agent_answer = gr.Textbox(label="Final Answer（最终答案 + 引用）", lines=6)
+
+            # Results gallery
+            agent_gallery = gr.Gallery(label="Top Results（检索结果预览）", columns=4, height=300)
+
+            agent_btn.click(
+                fn=run_agent,
+                inputs=[agent_query, agent_max_rounds, agent_evidence, agent_rerank],
+                outputs=[
+                    agent_plan, agent_traj, agent_evidence_md,
+                    agent_citations, agent_gallery, agent_answer, agent_status,
+                ],
+            )
+
 
 # 8. 启动应用
 if __name__ == "__main__":

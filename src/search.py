@@ -11,6 +11,7 @@ from PIL import Image
 # 导入之前写的查询扩展器
 from src.query_expand import expand_query
 from src.video_utils import make_video_clip
+from src.tools_schema import ToolResult, wrap_as_tool_result
 
 def load_meta(meta_path: Path) -> List[Dict]:
 
@@ -251,3 +252,48 @@ def search_video_clips(
         r["clip_path"] = clip_path
 
     return video_results, prompt_scores, expand_source
+
+
+# ========== ToolResult 包装函数（供 Agent 调用） ==========
+
+def tool_search_image_by_text(
+    query: str,
+    topk: int = 20,
+    expand_n: int = 6,
+    use_llm: bool = True,
+) -> ToolResult:
+    """Tool 包装版：文本搜图，返回标准 ToolResult。"""
+    results, _, expand_source = search_with_fusion(
+        user_query=query, topk=topk, expand_n=expand_n, use_llm=use_llm,
+    )
+    return wrap_as_tool_result(
+        results, tool_name="search_image_by_text", query=query,
+        metadata={"expand_source": expand_source},
+    )
+
+
+def tool_search_video_by_text(
+    query: str,
+    topk: int = 5,
+    expand_n: int = 6,
+    use_llm: bool = True,
+) -> ToolResult:
+    """Tool 包装版：文本搜视频帧，返回标准 ToolResult。"""
+    results, _, expand_source = search_video_clips(
+        user_query=query, topk=topk, expand_n=expand_n, use_llm=use_llm,
+    )
+    return wrap_as_tool_result(
+        results, tool_name="search_video_by_text", query=query,
+        metadata={"expand_source": expand_source},
+    )
+
+
+def tool_search_image_by_image(
+    image_path: str,
+    topk: int = 20,
+) -> ToolResult:
+    """Tool 包装版：以图搜图，返回标准 ToolResult。"""
+    results = search_by_image(image_input=image_path, topk=topk)
+    return wrap_as_tool_result(
+        results, tool_name="search_image_by_image", query=f"image:{image_path}",
+    )

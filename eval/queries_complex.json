@@ -1,0 +1,576 @@
+{
+  "meta": {
+    "description": "复杂查询评测集，覆盖5个难度等级，用于评测 Agentic Multimodal Search 系统",
+    "version": "1.0",
+    "total_queries": 80,
+    "levels": {
+      "L1_simple": "简单描述 - 单模态、单一对象（baseline）",
+      "L2_multi_attr": "多属性约束 - 多颜色/空间/数量约束",
+      "L3_cross_modal": "跨模态 - 同时涉及图片和视频的查询",
+      "L4_temporal": "时序/顺序 - 需要理解时间先后关系",
+      "L5_multi_hop": "多跳推理 - 需推理多个关联事实"
+    }
+  },
+  "queries": [
+    {
+      "id": "L1_001",
+      "level": "L1_simple",
+      "query_cn": "一只猫",
+      "query_en": "a cat",
+      "expected_modality": "image",
+      "difficulty": 1
+    },
+    {
+      "id": "L1_002",
+      "level": "L1_simple",
+      "query_cn": "一辆红色汽车",
+      "query_en": "a red car",
+      "expected_modality": "image",
+      "difficulty": 1
+    },
+    {
+      "id": "L1_003",
+      "level": "L1_simple",
+      "query_cn": "一个披萨",
+      "query_en": "a pizza",
+      "expected_modality": "image",
+      "difficulty": 1
+    },
+    {
+      "id": "L1_004",
+      "level": "L1_simple",
+      "query_cn": "一条狗在海滩上",
+      "query_en": "a dog on the beach",
+      "expected_modality": "image",
+      "difficulty": 1
+    },
+    {
+      "id": "L1_005",
+      "level": "L1_simple",
+      "query_cn": "一座雪山",
+      "query_en": "a snowy mountain",
+      "expected_modality": "image",
+      "difficulty": 1
+    },
+    {
+      "id": "L1_006",
+      "level": "L1_simple",
+      "query_cn": "一个苹果",
+      "query_en": "an apple",
+      "expected_modality": "image",
+      "difficulty": 1
+    },
+    {
+      "id": "L1_007",
+      "level": "L1_simple",
+      "query_cn": "一辆自行车",
+      "query_en": "a bicycle",
+      "expected_modality": "image",
+      "difficulty": 1
+    },
+    {
+      "id": "L1_008",
+      "level": "L1_simple",
+      "query_cn": "一个蛋糕",
+      "query_en": "a cake",
+      "expected_modality": "image",
+      "difficulty": 1
+    },
+    {
+      "id": "L1_009",
+      "level": "L1_simple",
+      "query_cn": "一架飞机在天空中",
+      "query_en": "an airplane in the sky",
+      "expected_modality": "image",
+      "difficulty": 1
+    },
+    {
+      "id": "L1_010",
+      "level": "L1_simple",
+      "query_cn": "一只长颈鹿",
+      "query_en": "a giraffe",
+      "expected_modality": "image",
+      "difficulty": 1
+    },
+    {
+      "id": "L2_001",
+      "level": "L2_multi_attr",
+      "query_cn": "一只坐在红色沙发上的黑猫",
+      "query_en": "a black cat sitting on a red sofa",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L2_002",
+      "level": "L2_multi_attr",
+      "query_cn": "一位穿白色衬衫和蓝色牛仔裤的女性",
+      "query_en": "a woman wearing a white shirt and blue jeans",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L2_003",
+      "level": "L2_multi_attr",
+      "query_cn": "桌上有三个杯子和一个花瓶",
+      "query_en": "three cups and a vase on a table",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L2_004",
+      "level": "L2_multi_attr",
+      "query_cn": "一位老人在公园长椅上看报纸",
+      "query_en": "an elderly man reading newspaper on a park bench",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L2_005",
+      "level": "L2_multi_attr",
+      "query_cn": "厨房里一个不锈钢水槽旁边放着水果",
+      "query_en": "a stainless steel sink with fruit next to it in a kitchen",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L2_006",
+      "level": "L2_multi_attr",
+      "query_cn": "一只棕色大狗和一只小白猫在草地上玩耍",
+      "query_en": "a large brown dog and a small white cat playing on grass",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L2_007",
+      "level": "L2_multi_attr",
+      "query_cn": "一个木制餐桌上摆着红酒和奶酪",
+      "query_en": "red wine and cheese on a wooden dining table",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L2_008",
+      "level": "L2_multi_attr",
+      "query_cn": "一辆黄色出租车在雨中的城市街道上",
+      "query_en": "a yellow taxi on a rainy city street",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L2_009",
+      "level": "L2_multi_attr",
+      "query_cn": "一位穿红裙子的女孩在向日葵田里",
+      "query_en": "a girl in a red dress in a sunflower field",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L2_010",
+      "level": "L2_multi_attr",
+      "query_cn": "一个戴着眼镜和帽子的男人在咖啡馆里用笔记本电脑",
+      "query_en": "a man with glasses and a hat using a laptop in a cafe",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L2_011",
+      "level": "L2_multi_attr",
+      "query_cn": "浅蓝色天空下的白色风车",
+      "query_en": "a white windmill under a light blue sky",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L2_012",
+      "level": "L2_multi_attr",
+      "query_cn": "一个孩子和一只金毛犬在雪地里堆雪人",
+      "query_en": "a child and a golden retriever building a snowman in the snow",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L2_013",
+      "level": "L2_multi_attr",
+      "query_cn": "浴室里一面大镜子前放着白色毛巾",
+      "query_en": "white towels in front of a large mirror in a bathroom",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L2_014",
+      "level": "L2_multi_attr",
+      "query_cn": "一座红色砖墙建筑前停着一排摩托车",
+      "query_en": "a row of motorcycles parked in front of a red brick building",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L2_015",
+      "level": "L2_multi_attr",
+      "query_cn": "一个放满绿色植物的阳台上有一只橘猫",
+      "query_en": "an orange cat on a balcony filled with green plants",
+      "expected_modality": "image",
+      "difficulty": 2
+    },
+    {
+      "id": "L3_001",
+      "level": "L3_cross_modal",
+      "query_cn": "找出包含猫的图片，以及包含猫的视频片段",
+      "query_en": "find images containing cats and video clips containing cats",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L3_002",
+      "level": "L3_cross_modal",
+      "query_cn": "搜索有人在弹吉他的照片和视频",
+      "query_en": "search for photos and videos of someone playing guitar",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L3_003",
+      "level": "L3_cross_modal",
+      "query_cn": "先展示一张蛋糕的图片，然后找一个切蛋糕的视频",
+      "query_en": "first show a picture of a cake, then find a video of cake cutting",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L3_004",
+      "level": "L3_cross_modal",
+      "query_cn": "找到包含篮球的图片和相关比赛视频",
+      "query_en": "find images containing a basketball and related game videos",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L3_005",
+      "level": "L3_cross_modal",
+      "query_cn": "搜索日落的图片和日落的延时视频",
+      "query_en": "search for sunset images and sunset timelapse videos",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L3_006",
+      "level": "L3_cross_modal",
+      "query_cn": "找出包含小狗的图片，和包含小狗在奔跑的视频",
+      "query_en": "find images of puppies and videos of puppies running",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L3_007",
+      "level": "L3_cross_modal",
+      "query_cn": "搜索厨房内部的照片，以及烹饪过程的视频",
+      "query_en": "search for kitchen interior photos and cooking process videos",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L3_008",
+      "level": "L3_cross_modal",
+      "query_cn": "找到一个花园的图片，以及有人在花园浇水的视频",
+      "query_en": "find a garden picture and a video of someone watering a garden",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L3_009",
+      "level": "L3_cross_modal",
+      "query_cn": "找到冲浪板的图片和冲浪的视频片段",
+      "query_en": "find surfboard images and surfing video clips",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L3_010",
+      "level": "L3_cross_modal",
+      "query_cn": "搜索包含自行车的图片和骑行视频",
+      "query_en": "search for bicycle images and cycling videos",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L3_011",
+      "level": "L3_cross_modal",
+      "query_cn": "找到一张婚礼蛋糕的照片和一个婚礼仪式的视频",
+      "query_en": "find a wedding cake photo and a wedding ceremony video",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L3_012",
+      "level": "L3_cross_modal",
+      "query_cn": "搜索一张足球的照片和一个进球的视频片段",
+      "query_en": "search for a soccer ball photo and a goal scoring video clip",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L3_013",
+      "level": "L3_cross_modal",
+      "query_cn": "找到山的风景照片和登山视频",
+      "query_en": "find mountain landscape photos and mountain climbing videos",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L3_014",
+      "level": "L3_cross_modal",
+      "query_cn": "搜索咖啡的图片和制作咖啡的视频",
+      "query_en": "search for coffee images and coffee making videos",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L3_015",
+      "level": "L3_cross_modal",
+      "query_cn": "找出一张钢琴的照片和一段钢琴演奏的视频",
+      "query_en": "find a piano photo and a piano performance video",
+      "expected_modality": "both",
+      "difficulty": 3
+    },
+    {
+      "id": "L4_001",
+      "level": "L4_temporal",
+      "query_cn": "先展示一只猫然后切换到一只狗的图片",
+      "query_en": "first show a cat then switch to a dog image",
+      "expected_modality": "image",
+      "difficulty": 4
+    },
+    {
+      "id": "L4_002",
+      "level": "L4_temporal",
+      "query_cn": "展示人们进入餐厅、坐下、点餐的完整流程",
+      "query_en": "show the complete process of people entering a restaurant, sitting down, and ordering",
+      "expected_modality": "video",
+      "difficulty": 4
+    },
+    {
+      "id": "L4_003",
+      "level": "L4_temporal",
+      "query_cn": "从日出到日落的完整过程图片",
+      "query_en": "images showing the complete process from sunrise to sunset",
+      "expected_modality": "image",
+      "difficulty": 4
+    },
+    {
+      "id": "L4_004",
+      "level": "L4_temporal",
+      "query_cn": "一辆车从远处驶来、经过、然后远离的连续画面",
+      "query_en": "sequential frames of a car approaching from afar, passing by, and driving away",
+      "expected_modality": "video",
+      "difficulty": 4
+    },
+    {
+      "id": "L4_005",
+      "level": "L4_temporal",
+      "query_cn": "一个人先喝咖啡然后吃蛋糕的过程",
+      "query_en": "a person drinking coffee first then eating cake",
+      "expected_modality": "both",
+      "difficulty": 4
+    },
+    {
+      "id": "L4_006",
+      "level": "L4_temporal",
+      "query_cn": "从空地到建成一栋房子的施工过程",
+      "query_en": "construction process from empty land to a completed house",
+      "expected_modality": "both",
+      "difficulty": 4
+    },
+    {
+      "id": "L4_007",
+      "level": "L4_temporal",
+      "query_cn": "一个人起床后刷牙然后吃早餐的早晨流程",
+      "query_en": "morning routine of a person waking up, brushing teeth, then eating breakfast",
+      "expected_modality": "video",
+      "difficulty": 4
+    },
+    {
+      "id": "L4_008",
+      "level": "L4_temporal",
+      "query_cn": "花朵从含苞待放到完全盛开的各阶段",
+      "query_en": "stages of a flower from bud to full bloom",
+      "expected_modality": "image",
+      "difficulty": 4
+    },
+    {
+      "id": "L4_009",
+      "level": "L4_temporal",
+      "query_cn": "飞机起飞、爬升、巡航的三个阶段图片",
+      "query_en": "images showing three phases of an airplane: takeoff, climb, and cruise",
+      "expected_modality": "both",
+      "difficulty": 4
+    },
+    {
+      "id": "L4_010",
+      "level": "L4_temporal",
+      "query_cn": "一个人走进图书馆、找书、坐下来阅读的完整场景",
+      "query_en": "complete scene of a person walking into a library, finding a book, and sitting down to read",
+      "expected_modality": "video",
+      "difficulty": 4
+    },
+    {
+      "id": "L4_011",
+      "level": "L4_temporal",
+      "query_cn": "一场雨从开始下到雨停后出现彩虹的整个过程",
+      "query_en": "the entire process from rain starting to a rainbow appearing after rain stops",
+      "expected_modality": "both",
+      "difficulty": 4
+    },
+    {
+      "id": "L4_012",
+      "level": "L4_temporal",
+      "query_cn": "运动员起跑、中途冲刺、冲线的跑步比赛三个瞬间",
+      "query_en": "three moments in a running race: start, mid-sprint, and finish line",
+      "expected_modality": "both",
+      "difficulty": 4
+    },
+    {
+      "id": "L4_013",
+      "level": "L4_temporal",
+      "query_cn": "一个人切洋葱、炒洋葱、装盘的完整烹饪步骤",
+      "query_en": "complete cooking steps of a person chopping onions, frying them, and plating",
+      "expected_modality": "video",
+      "difficulty": 4
+    },
+    {
+      "id": "L4_014",
+      "level": "L4_temporal",
+      "query_cn": "鸟巢从建造到孵蛋到小鸟出壳的完整过程",
+      "query_en": "complete process from nest building to egg hatching to chicks emerging",
+      "expected_modality": "both",
+      "difficulty": 4
+    },
+    {
+      "id": "L4_015",
+      "level": "L4_temporal",
+      "query_cn": "展示一年四季：春天的花、夏天的海滩、秋天的落叶、冬天的雪景",
+      "query_en": "show four seasons: spring flowers, summer beach, autumn leaves, winter snow",
+      "expected_modality": "image",
+      "difficulty": 4
+    },
+    {
+      "id": "L5_001",
+      "level": "L5_multi_hop",
+      "query_cn": "先找到一张意大利面的图片，然后在其中找出含有番茄酱的那张，再找到该图片中是否有奶酪",
+      "query_en": "find pasta pictures, identify ones with tomato sauce, then check if the image also contains cheese",
+      "expected_modality": "image",
+      "difficulty": 5
+    },
+    {
+      "id": "L5_002",
+      "level": "L5_multi_hop",
+      "query_cn": "找到有人在弹吉他的视频，如果这个人也同时在唱歌，找出视频中是否有其他乐器",
+      "query_en": "find a video of someone playing guitar; if they are also singing, check if other instruments are present",
+      "expected_modality": "video",
+      "difficulty": 5
+    },
+    {
+      "id": "L5_003",
+      "level": "L5_multi_hop",
+      "query_cn": "找到包含宠物狗和宠物猫在同一画面中的图片，判断它们是否在互动玩耍",
+      "query_en": "find images containing both a pet dog and cat in the same frame, determine if they are playing together",
+      "expected_modality": "image",
+      "difficulty": 5
+    },
+    {
+      "id": "L5_004",
+      "level": "L5_multi_hop",
+      "query_cn": "搜索包含自行车的图片，如果图片中有骑自行车的人，检查该人是否佩戴了头盔",
+      "query_en": "search for bicycle images; if a cyclist is present, check if they are wearing a helmet",
+      "expected_modality": "image",
+      "difficulty": 5
+    },
+    {
+      "id": "L5_005",
+      "level": "L5_multi_hop",
+      "query_cn": "找到厨房场景的图片，如果画面中有炉灶，检查炉灶上是否有正在烹饪的锅，并描述锅里的食物",
+      "query_en": "find kitchen images; if a stove is present, check if there is a cooking pot on it and describe the food",
+      "expected_modality": "image",
+      "difficulty": 5
+    },
+    {
+      "id": "L5_006",
+      "level": "L5_multi_hop",
+      "query_cn": "找到包含餐桌的图片，如果有食物在桌上，判断这是早餐、午餐还是晚餐",
+      "query_en": "find dining table images; if food is present, determine whether it's breakfast, lunch, or dinner",
+      "expected_modality": "image",
+      "difficulty": 5
+    },
+    {
+      "id": "L5_007",
+      "level": "L5_multi_hop",
+      "query_cn": "搜索海滩场景，如果画面中有冲浪者，检查海浪的大小和天气状况",
+      "query_en": "search beach scenes; if surfers are present, check wave size and weather conditions",
+      "expected_modality": "both",
+      "difficulty": 5
+    },
+    {
+      "id": "L5_008",
+      "level": "L5_multi_hop",
+      "query_cn": "找到办公室场景，如果有人在使用电脑，判断他们可能从事什么类型的工作",
+      "query_en": "find office scenes; if someone is using a computer, infer what type of work they might be doing",
+      "expected_modality": "image",
+      "difficulty": 5
+    },
+    {
+      "id": "L5_009",
+      "level": "L5_multi_hop",
+      "query_cn": "搜索城市夜景图片，如果画面中有霓虹灯招牌，识别招牌上的文字并推断这是哪个国家的街道",
+      "query_en": "search city night scenes; if neon signs are visible, identify text on signs and infer which country's street this is",
+      "expected_modality": "image",
+      "difficulty": 5
+    },
+    {
+      "id": "L5_010",
+      "level": "L5_multi_hop",
+      "query_cn": "找到运动场景，先识别是什么运动，再查找该运动中是否有球，如果有则描述球的颜色和位置",
+      "query_en": "find sports scenes, identify the sport, check if a ball is present, and describe its color and position",
+      "expected_modality": "both",
+      "difficulty": 5
+    },
+    {
+      "id": "L5_011",
+      "level": "L5_multi_hop",
+      "query_cn": "搜索公园场景，如果有野餐布，检查上面摆放的食物种类，推断这是几人份的野餐",
+      "query_en": "search park scenes; if a picnic blanket is present, check what food is on it and infer how many people the picnic serves",
+      "expected_modality": "image",
+      "difficulty": 5
+    },
+    {
+      "id": "L5_012",
+      "level": "L5_multi_hop",
+      "query_cn": "找到包含宠物的图片，识别宠物种类，如果宠物有佩戴项圈，描述项圈的颜色和样式",
+      "query_en": "find pet images, identify the pet type; if it wears a collar, describe the collar's color and style",
+      "expected_modality": "image",
+      "difficulty": 5
+    },
+    {
+      "id": "L5_013",
+      "level": "L5_multi_hop",
+      "query_cn": "搜索市场/集市场景，识别出售的商品类型，判断这是室内市场还是户外集市",
+      "query_en": "search market/bazaar scenes, identify types of goods sold, determine if it's indoor or outdoor",
+      "expected_modality": "image",
+      "difficulty": 5
+    },
+    {
+      "id": "L5_014",
+      "level": "L5_multi_hop",
+      "query_cn": "找到有人在阅读的图片，先判断他们在读什么（书/报纸/手机），再根据周围环境推断阅读场景",
+      "query_en": "find images of someone reading; identify what they are reading (book/newspaper/phone), then infer the reading context from surroundings",
+      "expected_modality": "image",
+      "difficulty": 5
+    },
+    {
+      "id": "L5_015",
+      "level": "L5_multi_hop",
+      "query_cn": "搜索包含动物的图片，如果动物和人类同时出现，判断两者之间的关系（宠物/野生动物/动物园场景）",
+      "query_en": "search images with animals; if both animals and humans appear, determine their relationship (pet/wildlife/zoo)",
+      "expected_modality": "image",
+      "difficulty": 5
+    }
+  ]
+}

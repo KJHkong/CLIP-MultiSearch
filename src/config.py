@@ -21,9 +21,14 @@ for _env_file in (_config_dir / ".env", _root_dir / ".env"):
         _load_dotenv(_env_file)
         break
 
-# 硅基流动：国内用 .cn，国际用 .com；Key 无效(401) 时可试另一个
-# 方式1：终端 set SILICONFLOW_API_KEY=你的key  方式2：.env 里写 SILICONFLOW_API_KEY=你的key
-LLM_API_BASE = os.environ.get("SILICONFLOW_API_BASE", "https://api.siliconflow.cn/v1")
-LLM_API_KEY = os.environ.get("SILICONFLOW_API_KEY", "")
-# 硅基流动上的 DeepSeek 模型名，可按控制台实际名称修改
-LLM_MODEL = os.environ.get("LLM_MODEL", "deepseek-ai/DeepSeek-V3")
+# ========== 文本推理 — DeepSeek 官方 API ==========
+# Planner / Reflection / Synthesis / Rerank / Query Rewrite
+LLM_API_BASE = os.environ.get("LLM_API_BASE", "https://api.deepseek.com")
+LLM_API_KEY = os.environ.get("LLM_API_KEY", "")
+LLM_MODEL = os.environ.get("LLM_MODEL", "deepseek-chat")
+
+# ========== 视觉模型 — 硅基流动 Qwen-VL ==========
+# Evidence Grounding (需多模态能力)
+VLM_API_BASE = os.environ.get("VLM_API_BASE", "https://api.siliconflow.cn/v1")
+VLM_API_KEY = os.environ.get("VLM_API_KEY", "")
+VLM_MODEL = os.environ.get("VLM_MODEL", "Qwen/Qwen3-VL-32B-Instruct")
